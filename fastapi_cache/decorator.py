@@ -91,6 +91,7 @@ def cache(
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
     private: bool = False,
+    client_expire: Optional[int] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -99,6 +100,7 @@ def cache(
     :param coder:
     :param key_builder:
     :param private:
+    :param client_expire:
     :param injected_dependency_namespace:
 
     :return:
@@ -185,6 +187,21 @@ def cache(
                 )
                 ttl, cached = 0, None
 
+            # Determine cache-control value
+            cache_control = ""
+            if client_expire is not None:
+                if client_expire == 0:
+                    cache_control.append("no-cache, ")
+                else:
+                    cache_control.append(f"max-age={client_expire}, ")
+            else:
+                cache_control.append(f"max-age={expire}, ")
+
+            if private:
+                cache_control.append("private, ")
+
+            cache_control = cache_control.rstrip(", ")
+
             if cached is None:  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
                 to_cache = coder.encode(result)
@@ -198,7 +215,6 @@ def cache(
                     )
 
                 if response:
-                    cache_control = "no-cache, private" if private else f"max-age={expire}"
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
@@ -210,7 +226,6 @@ def cache(
             else:  # cache hit
                 if response:
                     etag = f"W/{hash(cached)}"
-                    cache_control = "no-cache, private" if private else f"max-age={expire}"
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
