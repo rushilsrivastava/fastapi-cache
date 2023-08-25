@@ -10,6 +10,7 @@ def cache(
     coder: Type[Coder] = None,
     key_builder: Callable = None,
     namespace: Optional[str] = "",
+    private: bool = False,
 ):
     """
     cache all function
@@ -17,6 +18,7 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param private:
     :return:
     """
 
@@ -63,7 +65,7 @@ def cache(
             if_none_match = request.headers.get("if-none-match")
             if ret is not None:
                 if response:
-                    response.headers["Cache-Control"] = f"max-age={ttl}"
+                    response.headers["Cache-Control"] = "no-cache, private" if private else f"max-age={ttl}"
                     etag = f"W/{hash(ret)}"
                     if if_none_match == etag:
                         response.status_code = 304
