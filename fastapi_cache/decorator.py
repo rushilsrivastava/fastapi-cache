@@ -157,6 +157,7 @@ def cache(
             copy_kwargs = kwargs.copy()
             request: Optional[Request] = copy_kwargs.pop(request_param.name, None)  # type: ignore[assignment]
             response: Optional[Response] = copy_kwargs.pop(response_param.name, None)  # type: ignore[assignment]
+            print("KWARGS: ", copy_kwargs)
             print("RESPONSE: ", response)
 
             if _uncacheable(request):
