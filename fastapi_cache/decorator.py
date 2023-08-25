@@ -90,6 +90,7 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    private: bool = False,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -97,6 +98,8 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param private:
+    :param injected_dependency_namespace:
 
     :return:
     """
@@ -195,9 +198,10 @@ def cache(
                     )
 
                 if response:
+                    cache_control = "no-cache, private" if private else f"max-age={expire}"
                     response.headers.update(
                         {
-                            "Cache-Control": f"max-age={expire}",
+                            "Cache-Control": cache_control,
                             "ETag": f"W/{hash(to_cache)}",
                             cache_status_header: "MISS",
                         }
@@ -206,9 +210,10 @@ def cache(
             else:  # cache hit
                 if response:
                     etag = f"W/{hash(cached)}"
+                    cache_control = "no-cache, private" if private else f"max-age={expire}"
                     response.headers.update(
                         {
-                            "Cache-Control": f"max-age={ttl}",
+                            "Cache-Control": cache_control,
                             "ETag": etag,
                             cache_status_header: "HIT",
                         }
