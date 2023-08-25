@@ -132,6 +132,8 @@ def cache(
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
+            nonlocal client_expire
+            nonlocal private
 
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
@@ -162,6 +164,7 @@ def cache(
             prefix = FastAPICache.get_prefix()
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
+            client_expire = client_expire or expire
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
@@ -189,13 +192,10 @@ def cache(
 
             # Determine cache-control value
             cache_control = ""
-            if client_expire is not None:
-                if client_expire == 0:
-                    cache_control.append("no-cache, ")
-                else:
-                    cache_control.append(f"max-age={client_expire}, ")
+            if client_expire == 0:
+                cache_control.append("no-cache, ")
             else:
-                cache_control.append(f"max-age={expire}, ")
+                cache_control.append(f"max-age={client_expire}, ")
 
             if private:
                 cache_control.append("private, ")
