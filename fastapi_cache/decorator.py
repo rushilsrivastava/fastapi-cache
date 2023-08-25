@@ -90,6 +90,8 @@ def cache(
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
     injected_dependency_namespace: str = "__fastapi_cache",
+    private: bool = False,
+    client_expire: Optional[int] = None,
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
     """
     cache all function
@@ -97,6 +99,9 @@ def cache(
     :param expire:
     :param coder:
     :param key_builder:
+    :param private:
+    :param client_expire:
+    :param injected_dependency_namespace:
 
     :return:
     """
@@ -127,6 +132,8 @@ def cache(
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
+            nonlocal client_expire
+            nonlocal private
 
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
@@ -157,6 +164,7 @@ def cache(
             prefix = FastAPICache.get_prefix()
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
+            client_expire = client_expire or expire
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
@@ -182,6 +190,18 @@ def cache(
                 )
                 ttl, cached = 0, None
 
+            # Determine cache-control value
+            cache_control = ""
+            if client_expire == 0:
+                cache_control += "no-cache, "
+            else:
+                cache_control += f"max-age={client_expire}, "
+
+            if private:
+                cache_control += "private, "
+
+            cache_control = cache_control.rstrip(", ")
+
             if cached is None:  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
                 to_cache = coder.encode(result)
@@ -197,7 +217,7 @@ def cache(
                 if response:
                     response.headers.update(
                         {
-                            "Cache-Control": f"max-age={expire}",
+                            "Cache-Control": cache_control,
                             "ETag": f"W/{hash(to_cache)}",
                             cache_status_header: "MISS",
                         }
@@ -208,7 +228,7 @@ def cache(
                     etag = f"W/{hash(cached)}"
                     response.headers.update(
                         {
-                            "Cache-Control": f"max-age={ttl}",
+                            "Cache-Control": cache_control,
                             "ETag": etag,
                             cache_status_header: "HIT",
                         }
