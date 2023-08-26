@@ -89,6 +89,7 @@ def cache(
     coder: Optional[Type[Coder]] = None,
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
+    namespace_builder: Optional[Callable[[Callable[P, Awaitable[R]], str, dict], str]] = None,
     injected_dependency_namespace: str = "__fastapi_cache",
     private: bool = False,
     client_expire: Optional[int] = None,
@@ -134,6 +135,7 @@ def cache(
             nonlocal key_builder
             nonlocal client_expire
             nonlocal private
+            nonlocal namespace
 
             async def ensure_async_func(*args: P.args, **kwargs: P.kwargs) -> R:
                 """Run cached sync functions in thread pool just like FastAPI."""
@@ -164,14 +166,21 @@ def cache(
             prefix = FastAPICache.get_prefix()
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
-            client_expire = client_expire or expire
+            client_expire = client_expire if client_expire or client_expire == 0 else expire
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
+            local_namespace = namespace
+
+            local_namespace = namespace_builder(
+                func,
+                namespace=local_namespace,
+                kwargs=copy_kwargs,
+            ) if namespace_builder else local_namespace
 
             cache_key = key_builder(
                 func,
-                f"{prefix}:{namespace}",
+                f"{prefix}:{local_namespace}",
                 request=request,
                 response=response,
                 args=coder.encode(args),
@@ -192,6 +201,7 @@ def cache(
 
             # Determine cache-control value
             cache_control = ""
+
             if client_expire == 0:
                 cache_control += "no-cache, "
             else:
@@ -200,7 +210,7 @@ def cache(
             if private:
                 cache_control += "private, "
 
-            cache_control = cache_control.rstrip(", ")
+            cache_control = cache_control[:-2]
 
             if cached is None:  # cache miss
                 result = await ensure_async_func(*args, **kwargs)
