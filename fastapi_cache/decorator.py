@@ -29,7 +29,7 @@ from starlette.status import HTTP_304_NOT_MODIFIED
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.coder import Coder
-from fastapi_cache.types import KeyBuilder
+from fastapi_cache.types import KeyBuilder, NamespaceBuilder
 
 logger: logging.Logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -89,7 +89,7 @@ def cache(
     coder: Optional[Type[Coder]] = None,
     key_builder: Optional[KeyBuilder] = None,
     namespace: str = "",
-    namespace_builder: Optional[Callable[[Callable[P, Awaitable[R]], str, dict], str]] = None,
+    namespace_builder: Optional[NamespaceBuilder] = None,
     injected_dependency_namespace: str = "__fastapi_cache",
     private: bool = False,
     client_expire: Optional[int] = None,
@@ -103,6 +103,7 @@ def cache(
     :param private:
     :param client_expire:
     :param injected_dependency_namespace:
+    :param namespace_builder:
 
     :return:
     """
