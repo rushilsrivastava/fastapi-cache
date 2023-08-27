@@ -22,6 +22,17 @@ class KeyBuilder(Protocol):
         ...
 
 
+class NamespaceBuilder(Protocol):
+    def __call__(
+        self,
+        __function: _Func,
+        __namespace: str = ...,
+        *,
+        kwargs: Dict[str, Any],
+    ) -> str:
+        ...
+
+
 class Backend(abc.ABC):
     @abc.abstractmethod
     async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
