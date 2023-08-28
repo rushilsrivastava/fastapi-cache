@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import sys
 from functools import wraps
@@ -229,14 +230,14 @@ def cache(
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
-                            "ETag": f"W/{hash(to_cache)}",
+                            "ETag": f"W/{hashlib.md5(to_cache)}",
                             cache_status_header: "MISS",
                         }
                     )
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hash(cached)}"
+                    etag = f"W/{hashlib.md5(cached)}"
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
