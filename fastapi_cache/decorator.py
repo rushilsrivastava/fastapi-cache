@@ -237,7 +237,7 @@ def cache(
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hashlib.md5(cached)}"
+                    etag = f"W/{hashlib.md5(coder.encode(cached))}"
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
