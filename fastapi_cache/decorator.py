@@ -230,14 +230,14 @@ def cache(
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
-                            "ETag": f"W/{hashlib.md5(to_cache)}",
+                            "ETag": f"W/{hashlib.md5(to_cache.encode()).hexdigest()}",
                             cache_status_header: "MISS",
                         }
                     )
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hashlib.md5(coder.encode(cached))}"
+                    etag = f"W/{hashlib.md5(cached.encode()).hexdigest()}"
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
