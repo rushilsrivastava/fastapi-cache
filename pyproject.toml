@@ -15,7 +15,7 @@ packages = [
 include = ["LICENSE", "README.md"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.11"
 fastapi = ">0.100.0"
 uvicorn = "*"
 redis = { version = "^4.2.0rc1", optional = true }
@@ -29,11 +29,11 @@ importlib-metadata = {version = "^6.6.0", python = "<3.8"}
 optional = true
 
 [tool.poetry.group.linting.dependencies]
-mypy = { version = "^1.2.0", python = "^3.10" }
-pyright = { version = "^1.1.306", python = "^3.10" }
-types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2", python = "^3.10" }
-types-redis = { version = "^4.5.4.2", python = "^3.10" }
-ruff = { version = ">=0.0.267,<0.0.287", python = "^3.10" }
+mypy = { version = "^1.2.0", python = "^3.11" }
+pyright = { version = "^1.1.306", python = "^3.11" }
+types-aiobotocore = { extras = ["dynamodb"], version = "^2.5.0.post2", python = "^3.11" }
+types-redis = { version = "^4.5.4.2", python = "^3.11" }
+ruff = { version = ">=0.4.0,<0.5.0", python = "^3.11" }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -47,7 +47,7 @@ towncrier = "^22.12.0"
 optional = true
 
 [tool.poetry.group.distributing.dependencies]
-twine = { version = "^4.0.2", python = "^3.10" }
+twine = { version = "^4.0.2", python = "^3.11" }
 
 [tool.poetry.extras]
 redis = ["redis"]
@@ -57,7 +57,7 @@ all = ["redis", "aiomcache", "aiobotocore"]
 
 [tool.mypy]
 files = ["."]
-python_version = "3.7"
+python_version = "3.11"
 # equivalent of --strict
 warn_unused_configs = true
 disallow_any_generics = true
@@ -90,7 +90,7 @@ issue_format = "[#{issue}](https://github.com/long2ice/fastapi-cache/issues/{iss
 
 [tool.pyright]
 strict = ["fastapi_cache", "tests"]
-pythonVersion = "3.7"
+pythonVersion = "3.11"
 
 [tool.pytest.ini_options]
 addopts = "-p no:warnings"

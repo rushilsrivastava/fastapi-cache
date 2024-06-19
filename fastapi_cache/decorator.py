@@ -193,13 +193,13 @@ def cache(
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
 
             try:
-                ttl, cached = await backend.get_with_ttl(cache_key)
+                cached = await backend.get(cache_key)
             except Exception:
                 logger.warning(
                     f"Error retrieving cache key '{cache_key}' from backend:",
                     exc_info=True,
                 )
-                ttl, cached = 0, None
+                cached = None  # noqa: F841
 
             # Determine cache-control value
             cache_control = ""
@@ -230,14 +230,14 @@ def cache(
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
-                            "ETag": f"W/{hashlib.md5(to_cache.encode()).hexdigest()}",
+                            "ETag": f"W/{hashlib.md5(to_cache.encode()).hexdigest()}",  #noqa: S324
                             cache_status_header: "MISS",
                         }
                     )
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hashlib.md5(cached.encode()).hexdigest()}"
+                    etag = f"W/{hashlib.md5(cached.encode()).hexdigest()}"   #noqa: S324
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
