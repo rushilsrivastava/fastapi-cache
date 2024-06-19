@@ -51,6 +51,9 @@ or
 ### Quick Start
 
 ```python
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import Response
@@ -74,12 +77,11 @@ async def get_cache():
 async def index():
     return dict(hello="world")
 
-
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     redis = aioredis.from_url("redis://localhost")
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
-
+    yield
 ```
 
 ### Initialization
