@@ -193,13 +193,13 @@ def cache(
             assert isinstance(cache_key, str)  # noqa: S101  # assertion is a type guard
 
             try:
-                ttl, cached = await backend.get_with_ttl(cache_key)
+                cached = await backend.get(cache_key)
             except Exception:
                 logger.warning(
                     f"Error retrieving cache key '{cache_key}' from backend:",
                     exc_info=True,
                 )
-                ttl, cached = 0, None  # noqa: F841
+                cached = None  # noqa: F841
 
             # Determine cache-control value
             cache_control = ""
