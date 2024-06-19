@@ -199,7 +199,7 @@ def cache(
                     f"Error retrieving cache key '{cache_key}' from backend:",
                     exc_info=True,
                 )
-                ttl, cached = 0, None
+                ttl, cached = 0, None  # noqa: F841
 
             # Determine cache-control value
             cache_control = ""
@@ -230,14 +230,14 @@ def cache(
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
-                            "ETag": f"W/{hashlib.md5(to_cache.encode()).hexdigest()}",
+                            "ETag": f"W/{hashlib.md5(to_cache.encode()).hexdigest()}",  #noqa: S324
                             cache_status_header: "MISS",
                         }
                     )
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hashlib.md5(cached.encode()).hexdigest()}"
+                    etag = f"W/{hashlib.md5(cached.encode()).hexdigest()}"   #noqa: S324
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
