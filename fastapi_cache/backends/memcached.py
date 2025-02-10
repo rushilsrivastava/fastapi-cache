@@ -15,8 +15,15 @@ class MemcachedBackend(Backend):
     async def get(self, key: str) -> Optional[bytes]:
         return await self.mcache.get(key.encode())
 
-    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: bytes, expire: Optional[int] = None
+    ) -> None:
         await self.mcache.set(key.encode(), value, exptime=expire or 0)
 
-    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
+    async def clear(
+        self, namespace: Optional[str] = None, key: Optional[str] = None
+    ) -> int:
+        raise NotImplementedError
+
+    async def close(self) -> None:
         raise NotImplementedError

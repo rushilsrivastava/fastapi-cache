@@ -49,7 +49,9 @@ class DynamoBackend(Backend):
         self.client = await self.client.__aexit__(None, None, None)
 
     async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
-        response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
+        response = await self.client.get_item(
+            TableName=self.table_name, Key={"key": {"S": key}}
+        )
 
         if "Item" in response:
             value = response["Item"].get("value", {}).get("B")
@@ -66,19 +68,24 @@ class DynamoBackend(Backend):
         return 0, None
 
     async def get(self, key: str) -> Optional[bytes]:
-        response = await self.client.get_item(TableName=self.table_name, Key={"key": {"S": key}})
+        response = await self.client.get_item(
+            TableName=self.table_name, Key={"key": {"S": key}}
+        )
         if "Item" in response:
             return response["Item"].get("value", {}).get("B")
         return None
 
-    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: bytes, expire: Optional[int] = None
+    ) -> None:
         ttl = (
             {
                 "ttl": {
                     "N": str(
                         int(
                             (
-                                datetime.datetime.now() + datetime.timedelta(seconds=expire)
+                                datetime.datetime.now()
+                                + datetime.timedelta(seconds=expire)
                             ).timestamp()
                         )
                     )
@@ -99,5 +106,7 @@ class DynamoBackend(Backend):
             },
         )
 
-    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
+    async def clear(
+        self, namespace: Optional[str] = None, key: Optional[str] = None
+    ) -> int:
         raise NotImplementedError

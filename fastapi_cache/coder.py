@@ -25,9 +25,8 @@ _T = TypeVar("_T", bound=type)
 
 
 CONVERTERS: Dict[str, Callable[[str], Any]] = {
-    # Pendulum 3.0.0 adds parse to __all__, at which point these ignores can be removed
-    "date": lambda x: pendulum.parse(x, exact=True),  # type: ignore[attr-defined]
-    "datetime": lambda x: pendulum.parse(x, exact=True),  # type: ignore[attr-defined]
+    "date": lambda x: pendulum.parse(x, exact=True),
+    "datetime": lambda x: pendulum.parse(x, exact=True),
     "decimal": Decimal,
 }
 
@@ -57,7 +56,7 @@ def object_hook(obj: Any) -> Any:
 
 class Coder:
     @classmethod
-    def encode(cls, value: Any) -> bytes:
+    def encode(cls, value: Any) -> Any:
         raise NotImplementedError
 
     @classmethod
@@ -73,16 +72,16 @@ class Coder:
 
     @overload
     @classmethod
-    def decode_as_type(cls, value: bytes, *, type_: _T) -> _T:
-        ...
+    def decode_as_type(cls, value: bytes, *, type_: _T) -> _T: ...
 
     @overload
     @classmethod
-    def decode_as_type(cls, value: bytes, *, type_: None) -> Any:
-        ...
+    def decode_as_type(cls, value: bytes, *, type_: None) -> Any: ...
 
     @classmethod
-    def decode_as_type(cls, value: bytes, *, type_: Optional[_T]) -> Union[_T, Any]:
+    def decode_as_type(
+        cls, value: bytes, *, type_: Optional[_T]
+    ) -> Union[_T, Any]:
         """Decode value to the specific given type
 
         The default implementation uses the Pydantic model system to convert the value.
@@ -94,7 +93,10 @@ class Coder:
                 field = cls._type_field_cache[type_]
             except KeyError:
                 field = cls._type_field_cache[type_] = fields.ModelField(
-                    name="body", type_=type_, class_validators=None, model_config=BaseConfig
+                    name="body",
+                    type_=type_,
+                    class_validators=None,
+                    model_config=BaseConfig,
                 )
             result, errors = field.validate(result, {}, loc=())
             if errors is not None:

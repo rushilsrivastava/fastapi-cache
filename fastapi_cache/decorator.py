@@ -47,7 +47,9 @@ def _augment_signature(signature: Signature, *extra: Parameter) -> Signature:
     while parameters and parameters[-1].kind is Parameter.VAR_KEYWORD:
         variadic_keyword_params.append(parameters.pop())
 
-    return signature.replace(parameters=[*parameters, *extra, *variadic_keyword_params])
+    return signature.replace(
+        parameters=[*parameters, *extra, *variadic_keyword_params]
+    )
 
 
 def _locate_param(
@@ -59,7 +61,8 @@ def _locate_param(
 
     """
     param = next(
-        (p for p in sig.parameters.values() if p.annotation is dep.annotation), None
+        (p for p in sig.parameters.values() if p.annotation is dep.annotation),
+        None,
     )
     if param is None:
         to_inject.append(dep)
@@ -94,7 +97,9 @@ def cache(
     injected_dependency_namespace: str = "__fastapi_cache",
     private: bool = False,
     client_expire: Optional[int] = None,
-) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]]:
+) -> Callable[
+    [Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]
+]:
     """
     cache all function
     :param namespace:
@@ -121,17 +126,23 @@ def cache(
     )
 
     def wrapper(
-        func: Callable[P, Awaitable[R]]
+        func: Callable[P, Awaitable[R]],
     ) -> Callable[P, Awaitable[Union[R, Response]]]:
         # get_typed_signature ensures that any forward references are resolved first
         wrapped_signature = get_typed_signature(func)
         to_inject: List[Parameter] = []
-        request_param = _locate_param(wrapped_signature, injected_request, to_inject)
-        response_param = _locate_param(wrapped_signature, injected_response, to_inject)
+        request_param = _locate_param(
+            wrapped_signature, injected_request, to_inject
+        )
+        response_param = _locate_param(
+            wrapped_signature, injected_response, to_inject
+        )
         return_type = get_typed_return_annotation(func)
 
         @wraps(func)
-        async def inner(*args: P.args, **kwargs: P.kwargs) -> Union[R, Response]:
+        async def inner(
+            *args: P.args, **kwargs: P.kwargs
+        ) -> Union[R, Response]:
             nonlocal coder
             nonlocal expire
             nonlocal key_builder
@@ -159,8 +170,12 @@ def cache(
                     return await run_in_threadpool(func, *args, **kwargs)  # type: ignore[arg-type]
 
             copy_kwargs = kwargs.copy()
-            request: Optional[Request] = copy_kwargs.pop(request_param.name, None)  # type: ignore[assignment]
-            response: Optional[Response] = copy_kwargs.pop(response_param.name, None)  # type: ignore[assignment]
+            request: Optional[Request] = copy_kwargs.pop(
+                request_param.name, None
+            )  # type: ignore[assignment]
+            response: Optional[Response] = copy_kwargs.pop(
+                response_param.name, None
+            )  # type: ignore[assignment]
 
             if _uncacheable(request):
                 return await ensure_async_func(*args, **kwargs)
@@ -168,17 +183,23 @@ def cache(
             prefix = FastAPICache.get_prefix()
             coder = coder or FastAPICache.get_coder()
             expire = expire or FastAPICache.get_expire()
-            client_expire = client_expire if client_expire or client_expire == 0 else expire
+            client_expire = (
+                client_expire if client_expire or client_expire == 0 else expire
+            )
             key_builder = key_builder or FastAPICache.get_key_builder()
             backend = FastAPICache.get_backend()
             cache_status_header = FastAPICache.get_cache_status_header()
             local_namespace = namespace
 
-            local_namespace = namespace_builder(
-                func,
-                namespace=local_namespace,
-                kwargs=copy_kwargs,
-            ) if namespace_builder else local_namespace
+            local_namespace = (
+                namespace_builder(
+                    func,
+                    namespace=local_namespace,
+                    kwargs=copy_kwargs,
+                )
+                if namespace_builder
+                else local_namespace
+            )
 
             cache_key = key_builder(
                 func,
@@ -230,14 +251,15 @@ def cache(
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
-                            "ETag": f"W/{hashlib.md5(to_cache.encode()).hexdigest()}",  #noqa: S324
+                            "ETag": f"W/{hashlib.md5(to_cache.encode()).hexdigest()}",  # noqa: S324
                             cache_status_header: "MISS",
                         }
                     )
 
             else:  # cache hit
                 if response:
-                    etag = f"W/{hashlib.md5(cached.encode()).hexdigest()}"   #noqa: S324
+                    # this is actually of type str, but this library is not typed correctly.
+                    etag = f"W/{hashlib.md5(cached.encode()).hexdigest()}"  # type: ignore[attr-defined]  # noqa: S324
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
@@ -246,12 +268,25 @@ def cache(
                         }
                     )
 
-                    if_none_match = request and request.headers.get("if-none-match")
+                    if_none_match = request and request.headers.get(
+                        "if-none-match"
+                    )
                     if if_none_match == etag:
                         response.status_code = HTTP_304_NOT_MODIFIED
                         return response
 
-                result = cast(R, coder.decode_as_type(cached, type_=return_type))
+                result = cast(
+                    R, coder.decode_as_type(cached, type_=return_type)
+                )
+
+            # Close the backend
+            try:
+                await backend.close()
+            except Exception:
+                logger.warning(
+                    "Error closing backend:",
+                    exc_info=True,
+                )
 
             return result
 

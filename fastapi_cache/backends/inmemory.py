@@ -43,11 +43,15 @@ class InMemoryBackend(Backend):
                 return v.data
             return None
 
-    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: bytes, expire: Optional[int] = None
+    ) -> None:
         async with self._lock:
             self._store[key] = Value(value, self._now + (expire or 0))
 
-    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
+    async def clear(
+        self, namespace: Optional[str] = None, key: Optional[str] = None
+    ) -> int:
         count = 0
         if namespace:
             keys = list(self._store.keys())
@@ -59,3 +63,6 @@ class InMemoryBackend(Backend):
             del self._store[key]
             count += 1
         return count
+
+    async def close(self) -> None:
+        raise NotImplementedError

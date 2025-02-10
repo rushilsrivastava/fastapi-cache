@@ -18,19 +18,17 @@ class KeyBuilder(Protocol):
         response: Optional[Response] = ...,
         args: Tuple[Any, ...],
         kwargs: Dict[str, Any],
-    ) -> Union[Awaitable[str], str]:
-        ...
+    ) -> Union[Awaitable[str], str]: ...
 
 
 class NamespaceBuilder(Protocol):
     def __call__(
         self,
-        __function: _Func,
-        __namespace: str = ...,
+        function: _Func,
+        namespace: str = ...,
         *,
         kwargs: Dict[str, Any],
-    ) -> str:
-        ...
+    ) -> str: ...
 
 
 class Backend(abc.ABC):
@@ -43,9 +41,17 @@ class Backend(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def set(self, key: str, value: bytes, expire: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: bytes, expire: Optional[int] = None
+    ) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def clear(self, namespace: Optional[str] = None, key: Optional[str] = None) -> int:
+    async def clear(
+        self, namespace: Optional[str] = None, key: Optional[str] = None
+    ) -> int:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def close(self) -> None:
         raise NotImplementedError
