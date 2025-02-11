@@ -7,7 +7,15 @@ from fastapi_cache.types import Backend
 
 
 class RedisBackend(Backend):
-    def __init__(self, redis: Union["Redis[bytes]", "RedisCluster[bytes]"]):
+    def __init__(
+        self,
+        redis: Union[
+            "Redis[bytes]",
+            "RedisCluster[bytes]",
+            "Redis[str]",
+            "RedisCluster[str]",
+        ],
+    ):
         self.redis = redis
         self.is_cluster: bool = isinstance(redis, RedisCluster)
 
@@ -32,3 +40,6 @@ class RedisBackend(Backend):
         elif key:
             return await self.redis.delete(key)  # type: ignore[union-attr]
         return 0
+
+    async def close(self) -> None:
+        return await self.redis.aclose()
