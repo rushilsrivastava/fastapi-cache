@@ -93,6 +93,15 @@ class FastAPICache:
         return cls._enable
 
     @classmethod
+    async def clear_namespace_non_block(
+        cls, namespace: str, count: int = 1000, batch_size: int = 1000
+    ) -> int:
+        assert cls._backend, "You must call init first!"  # noqa: S101
+        return await cls._backend.clear_namespace_non_block(
+            namespace, count, batch_size
+        )
+
+    @classmethod
     async def clear(
         cls, namespace: Optional[str] = None, key: Optional[str] = None
     ) -> int:

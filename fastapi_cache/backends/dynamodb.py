@@ -47,6 +47,7 @@ class DynamoBackend(Backend):
 
     async def close(self) -> None:
         self.client = await self.client.__aexit__(None, None, None)
+        return self.client
 
     async def get_with_ttl(self, key: str) -> Tuple[int, Optional[bytes]]:
         response = await self.client.get_item(
@@ -105,6 +106,11 @@ class DynamoBackend(Backend):
                 **ttl,
             },
         )
+
+    async def clear_namespace_non_block(
+        self, namespace: str, count: int = 1000, batch_size: int = 1000
+    ) -> int:
+        raise NotImplementedError
 
     async def clear(
         self, namespace: Optional[str] = None, key: Optional[str] = None

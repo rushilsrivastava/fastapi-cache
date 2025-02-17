@@ -37,7 +37,7 @@ class Backend(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get(self, key: str) -> Optional[bytes]:
+    async def get(self, key: str) -> bytes | str | None:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -47,11 +47,17 @@ class Backend(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    async def clear_namespace_non_block(
+        self, namespace: str, count: int = 1000, batch_size: int = 1000
+    ) -> int:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     async def clear(
         self, namespace: Optional[str] = None, key: Optional[str] = None
     ) -> int:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def close(self) -> None:
+    async def close(self) -> bool | None:
         raise NotImplementedError

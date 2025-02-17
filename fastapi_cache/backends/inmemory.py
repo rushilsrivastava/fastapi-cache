@@ -49,6 +49,11 @@ class InMemoryBackend(Backend):
         async with self._lock:
             self._store[key] = Value(value, self._now + (expire or 0))
 
+    async def clear_namespace_non_block(
+        self, namespace: str, count: int = 1000, batch_size: int = 1000
+    ) -> int:
+        raise NotImplementedError
+
     async def clear(
         self, namespace: Optional[str] = None, key: Optional[str] = None
     ) -> int:

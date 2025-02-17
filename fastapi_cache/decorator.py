@@ -248,18 +248,28 @@ def cache(
                     )
 
                 if response:
+                    if isinstance(to_cache, bytes):
+                        hash_key = hashlib.md5(to_cache).hexdigest()  # noqa: S324
+                    else:
+                        hash_key = hashlib.md5(  # noqa: S324
+                            str(to_cache).encode()
+                        ).hexdigest()
+                    etag = f"W/{hash_key}"
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
-                            "ETag": f"W/{hashlib.md5(to_cache.encode()).hexdigest()}",  # noqa: S324
+                            "ETag": etag,
                             cache_status_header: "MISS",
                         }
                     )
 
             else:  # cache hit
                 if response:
-                    # this is actually of type str, but this library is not typed correctly.
-                    etag = f"W/{hashlib.md5(cached.encode()).hexdigest()}"  # type: ignore[attr-defined]  # noqa: S324
+                    if isinstance(cached, bytes):
+                        hash_key = hashlib.md5(cached).hexdigest()  # noqa: S324
+                    else:
+                        hash_key = hashlib.md5(str(cached).encode()).hexdigest()  # noqa: S324
+                    etag = f"W/{hash_key}"
                     response.headers.update(
                         {
                             "Cache-Control": cache_control,
