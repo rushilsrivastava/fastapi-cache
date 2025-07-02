@@ -70,18 +70,19 @@ def _locate_param(
     return param
 
 
-def _uncacheable(request: Optional[Request]) -> bool:
+def _uncacheable(request: Optional[Request], allow_post: bool) -> bool:
     """Determine if this request should not be cached
 
     Returns true if:
     - Caching has been disabled globally
-    - This is not a GET request
     - The request has a Cache-Control header with a value of "no-store" or "no-cache"
 
     """
     if not FastAPICache.get_enable():
         return True
     if request is None:
+        return False
+    if request.method == "POST" and allow_post:
         return False
     if request.method != "GET":
         return True
@@ -97,6 +98,7 @@ def cache(
     injected_dependency_namespace: str = "__fastapi_cache",
     private: bool = False,
     client_expire: Optional[int] = None,
+    allow_post: bool = False,
 ) -> Callable[
     [Callable[P, Awaitable[R]]], Callable[P, Awaitable[Union[R, Response]]]
 ]:
@@ -110,6 +112,7 @@ def cache(
     :param client_expire:
     :param injected_dependency_namespace:
     :param namespace_builder:
+    :param allow_post:
 
     :return:
     """
@@ -177,7 +180,7 @@ def cache(
                 response_param.name, None
             )  # type: ignore[assignment]
 
-            if _uncacheable(request):
+            if _uncacheable(request, allow_post):
                 return await ensure_async_func(*args, **kwargs)
 
             prefix = FastAPICache.get_prefix()
